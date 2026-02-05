@@ -96,18 +96,12 @@ export class TelegramUpdate {
     await this.orderHandler.selectService(ctx, service);
   }
 
-  // + tugmasi
-  @Action('increase')
-  async increase(@Ctx() ctx: any): Promise<void> {
+  // Kalkulyator raqam bosilganda
+  @Action(/^num:(.+)$/)
+  async numberInput(@Ctx() ctx: any): Promise<void> {
     await ctx.answerCbQuery();
-    await this.orderHandler.increase(ctx);
-  }
-
-  // - tugmasi
-  @Action('decrease')
-  async decrease(@Ctx() ctx: any): Promise<void> {
-    await ctx.answerCbQuery();
-    await this.orderHandler.decrease(ctx);
+    const num = ctx.match[1];
+    await this.orderHandler.handleNumberInput(ctx, num);
   }
 
   // Davom etish

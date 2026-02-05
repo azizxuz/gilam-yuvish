@@ -163,16 +163,8 @@ export class OrderHandler {
         });
       }
     } else {
-      // Count/chairs uchun button
-      const keyboard: InlineKeyboardButton.CallbackButton[][] = [
-        [
-          { text: '➖', callback_data: 'decrease' },
-          { text: '0', callback_data: 'value' },
-          { text: '➕', callback_data: 'increase' },
-        ],
-        [{ text: '✅ Davom etish', callback_data: 'continue_order' }],
-        [{ text: '🔙 Ortga', callback_data: 'order' }],
-      ];
+      // Count/chairs uchun kalkulyator button
+      const keyboard = this.getCalculatorKeyboard(0);
 
       // Agar photo telegram link bo'lsa
       if (meta.photo.startsWith('https://t.me/')) {
@@ -182,62 +174,90 @@ export class OrderHandler {
 
         try {
           await ctx.telegram.copyMessage(ctx.chat.id, channelId, messageId, {
-            caption: meta.description,
+            caption: `${meta.description}\n\n📊 Miqdor: 0`,
             reply_markup: { inline_keyboard: keyboard },
           });
         } catch (error) {
           console.error('Copy message error:', error);
-          await ctx.reply(meta.description, {
+          await ctx.reply(`${meta.description}\n\n📊 Miqdor: 0`, {
             reply_markup: { inline_keyboard: keyboard },
           });
         }
       } else {
         await ctx.replyWithPhoto(meta.photo, {
-          caption: meta.description,
+          caption: `${meta.description}\n\n📊 Miqdor: 0`,
           reply_markup: { inline_keyboard: keyboard },
         });
       }
     }
   }
 
-  // + bosilganda
-  async increase(ctx: any) {
-    if (ctx.session.currentOrder?.currentValue === undefined) {
-      ctx.session.currentOrder.currentValue = 0;
-    }
-    ctx.session.currentOrder.currentValue++;
-
-    await this.updateValueDisplay(ctx);
-  }
-
-  // - bosilganda
-  async decrease(ctx: any) {
-    if (ctx.session.currentOrder?.currentValue > 0) {
-      ctx.session.currentOrder.currentValue--;
-      await this.updateValueDisplay(ctx);
-    }
-  }
-
-  // Qiymat displayni yangilash
-  private async updateValueDisplay(ctx: any) {
-    const value = ctx.session.currentOrder?.currentValue || 0;
-    const service = ctx.session.currentOrder?.currentService;
-    const meta = SERVICE_META[service];
-
-    const keyboard: InlineKeyboardButton.CallbackButton[][] = [
+  // Kalkulyator klaviaturasini yaratish
+  private getCalculatorKeyboard(
+    currentValue: number,
+  ): InlineKeyboardButton.CallbackButton[][] {
+    return [
       [
-        { text: '➖', callback_data: 'decrease' },
-        { text: value.toString(), callback_data: 'value' },
-        { text: '➕', callback_data: 'increase' },
+        { text: '1', callback_data: 'num:1' },
+        { text: '2', callback_data: 'num:2' },
+        { text: '3', callback_data: 'num:3' },
+      ],
+      [
+        { text: '4', callback_data: 'num:4' },
+        { text: '5', callback_data: 'num:5' },
+        { text: '6', callback_data: 'num:6' },
+      ],
+      [
+        { text: '7', callback_data: 'num:7' },
+        { text: '8', callback_data: 'num:8' },
+        { text: '9', callback_data: 'num:9' },
+      ],
+      [
+        { text: '0', callback_data: 'num:0' },
+        { text: "⌫ O'chirish", callback_data: 'num:clear' },
       ],
       [{ text: '✅ Davom etish', callback_data: 'continue_order' }],
       [{ text: '🔙 Ortga', callback_data: 'order' }],
     ];
+  }
+
+  // Raqam bosilganda
+  async handleNumberInput(ctx: any, num: string) {
+    if (!ctx.session.currentOrder?.currentService) {
+      return;
+    }
+
+    let currentValue = ctx.session.currentOrder.currentValue || 0;
+
+    if (num === 'clear') {
+      // O'chirish - oxirgi raqamni o'chirish
+      currentValue = Math.floor(currentValue / 10);
+    } else {
+      // Raqam qo'shish
+      const digit = parseInt(num);
+      currentValue = currentValue * 10 + digit;
+    }
+
+    ctx.session.currentOrder.currentValue = currentValue;
+
+    await this.updateCalculatorDisplay(ctx);
+  }
+
+  // Kalkulyator displayni yangilash
+  private async updateCalculatorDisplay(ctx: any) {
+    const value = ctx.session.currentOrder?.currentValue || 0;
+    const service = ctx.session.currentOrder?.currentService;
+    const meta = SERVICE_META[service];
+
+    const keyboard = this.getCalculatorKeyboard(value);
 
     try {
-      await ctx.editMessageCaption(meta.description, {
-        reply_markup: { inline_keyboard: keyboard },
-      });
+      await ctx.editMessageCaption(
+        `${meta.description}\n\n📊 Miqdor: ${value}`,
+        {
+          reply_markup: { inline_keyboard: keyboard },
+        },
+      );
     } catch (error) {
       // Agar edit ishlamasa, ignore qilamiz
     }

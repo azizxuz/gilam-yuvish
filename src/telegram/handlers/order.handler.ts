@@ -124,71 +124,39 @@ export class OrderHandler {
       // Ignore
     }
 
-    // Agar area type bo'lsa - text kutamiz
+    // Barcha xizmatlar uchun kalkulyator
+    const keyboard = this.getCalculatorKeyboard(0);
+
+    // Caption yaratish - area uchun boshqacha
+    let caption: string;
     if (meta.type === 'area') {
-      ctx.session.waitingForArea = true;
-
-      // Agar photo telegram link bo'lsa
-      if (meta.photo.startsWith('https://t.me/')) {
-        const parts = meta.photo.split('/');
-        const messageId = parseInt(parts[parts.length - 1]);
-        const channelId = `-100${parts[parts.length - 2]}`;
-
-        try {
-          await ctx.telegram.copyMessage(ctx.chat.id, channelId, messageId, {
-            caption: `${meta.description}\n\n📏 Maydonni kiriting (kv.m):`,
-            reply_markup: {
-              inline_keyboard: [[{ text: '🔙 Ortga', callback_data: 'order' }]],
-            },
-          });
-        } catch (error) {
-          console.error('Copy message error:', error);
-          await ctx.reply(
-            `${meta.description}\n\n📏 Maydonni kiriting (kv.m):`,
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: '🔙 Ortga', callback_data: 'order' }],
-                ],
-              },
-            },
-          );
-        }
-      } else {
-        await ctx.replyWithPhoto(meta.photo, {
-          caption: `${meta.description}\n\n📏 Maydonni kiriting (kv.m):`,
-          reply_markup: {
-            inline_keyboard: [[{ text: '🔙 Ortga', callback_data: 'order' }]],
-          },
-        });
-      }
+      caption = `${meta.description}\n\n📏 Maydon: 0 kv.m`;
     } else {
-      // Count/chairs uchun kalkulyator button
-      const keyboard = this.getCalculatorKeyboard(0);
+      caption = `${meta.description}\n\n📊 Miqdor: 0`;
+    }
 
-      // Agar photo telegram link bo'lsa
-      if (meta.photo.startsWith('https://t.me/')) {
-        const parts = meta.photo.split('/');
-        const messageId = parseInt(parts[parts.length - 1]);
-        const channelId = `-100${parts[parts.length - 2]}`;
+    // Agar photo telegram link bo'lsa
+    if (meta.photo.startsWith('https://t.me/')) {
+      const parts = meta.photo.split('/');
+      const messageId = parseInt(parts[parts.length - 1]);
+      const channelId = `-100${parts[parts.length - 2]}`;
 
-        try {
-          await ctx.telegram.copyMessage(ctx.chat.id, channelId, messageId, {
-            caption: `${meta.description}\n\n📊 Miqdor: 0`,
-            reply_markup: { inline_keyboard: keyboard },
-          });
-        } catch (error) {
-          console.error('Copy message error:', error);
-          await ctx.reply(`${meta.description}\n\n📊 Miqdor: 0`, {
-            reply_markup: { inline_keyboard: keyboard },
-          });
-        }
-      } else {
-        await ctx.replyWithPhoto(meta.photo, {
-          caption: `${meta.description}\n\n📊 Miqdor: 0`,
+      try {
+        await ctx.telegram.copyMessage(ctx.chat.id, channelId, messageId, {
+          caption: caption,
+          reply_markup: { inline_keyboard: keyboard },
+        });
+      } catch (error) {
+        console.error('Copy message error:', error);
+        await ctx.reply(caption, {
           reply_markup: { inline_keyboard: keyboard },
         });
       }
+    } else {
+      await ctx.replyWithPhoto(meta.photo, {
+        caption: caption,
+        reply_markup: { inline_keyboard: keyboard },
+      });
     }
   }
 
@@ -251,33 +219,21 @@ export class OrderHandler {
 
     const keyboard = this.getCalculatorKeyboard(value);
 
+    // Caption yaratish - area uchun boshqacha
+    let caption: string;
+    if (meta.type === 'area') {
+      caption = `${meta.description}\n\n📏 Maydon: ${value} kv.m`;
+    } else {
+      caption = `${meta.description}\n\n📊 Miqdor: ${value}`;
+    }
+
     try {
-      await ctx.editMessageCaption(
-        `${meta.description}\n\n📊 Miqdor: ${value}`,
-        {
-          reply_markup: { inline_keyboard: keyboard },
-        },
-      );
+      await ctx.editMessageCaption(caption, {
+        reply_markup: { inline_keyboard: keyboard },
+      });
     } catch (error) {
       // Agar edit ishlamasa, ignore qilamiz
     }
-  }
-
-  // Text kiritilganda (area uchun)
-  async handleAreaInput(ctx: any, text: string) {
-    if (!ctx.session.waitingForArea) return false;
-
-    const area = parseFloat(text);
-    if (isNaN(area) || area <= 0) {
-      await ctx.reply("❌ Noto'g'ri qiymat! Iltimos, raqam kiriting.");
-      return true;
-    }
-
-    ctx.session.currentOrder.currentValue = area;
-    delete ctx.session.waitingForArea;
-
-    await this.continueOrder(ctx);
-    return true;
   }
 
   // Davom etish

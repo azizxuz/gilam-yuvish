@@ -140,11 +140,6 @@ export class TelegramUpdate {
   // Text qabul qilish
   @On('text')
   async onText(@Ctx() ctx: any): Promise<void> {
-    // Area kiritish
-    if (await this.orderHandler.handleAreaInput(ctx, ctx.message.text)) {
-      return;
-    }
-
     // Telefon kiritish (text sifatida)
     if (await this.orderHandler.handlePhoneInput(ctx)) {
       return;

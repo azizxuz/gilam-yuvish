@@ -1,0 +1,199 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Users{
+  id Int @id @default(autoincrement())
+  userId String @unique
+  userName String?
+  fullName String?
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+
+enum SERVICES{
+  GILAM
+  ODEYAL
+  PARDA
+  KORPACHA
+  MEBEL
+  BRUSCHATKA
+  BASSEYN
+  FASAD
+}
+
+model Order {
+  id          Int      @id @default(autoincrement())
+  telegramId  BigInt
+  phoneNumber String?
+  address     String?
+  status      String   @default("NEW") // NEW, CONFIRMED, DONE
+  createdAt   DateTime @default(now())
+  region      String?
+  
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId  Int
+  service  SERVICES
+
+  count    Int?     // dona (gilam, adyol, stul)
+  area     Int?     // kv.m (fasad, bruschatka, basseyn)
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// /////////////////////////////////
+// // USERS
+// /////////////////////////////////
+
+// model User {
+//   id            Int        @id @default(autoincrement())
+//   telegramId    String?    @unique
+//   firstName     String?
+//   lastName      String?
+//   phone         String?
+//   language      String      @default("uz")
+//   createdAt     DateTime    @default(now())
+//   updatedAt     DateTime    @updatedAt
+
+//   // Relations
+//   orders        Order[]
+//   messages      MessageLog[]
+// }
+
+
+// /////////////////////////////////
+// // COURIERS
+// /////////////////////////////////
+
+// model Courier {
+//   id        Int        @id @default(autoincrement())
+//   name      String
+//   phone     String
+//   isActive  Boolean     @default(true)
+//   createdAt DateTime    @default(now())
+
+//   // Relations
+//   orders    Order[]
+// }
+
+
+// /////////////////////////////////
+// // TARIFFS (Xizmat narxlari)
+// /////////////////////////////////
+
+// model Tariff {
+//   id           Int        @id @default(autoincrement())
+//   serviceName  String
+//   pricePerM2   Float
+//   minimalPrice Float      @default(0)
+//   description  String?
+//   isActive     Boolean    @default(true)
+//   createdAt    DateTime   @default(now())
+
+//   // Tarif o'zgarishlar tarixini saqlash
+//   history      TariffHistory[]
+//   orders Order[]
+// }
+
+// model TariffHistory {
+//   id           Int       @id @default(autoincrement())
+//   tariffId     Int
+//   oldPrice     Float
+//   newPrice     Float
+//   changedAt    DateTime  @default(now())
+
+//   tariff       Tariff    @relation(fields: [tariffId], references: [id])
+// }
+
+
+// /////////////////////////////////
+// // ORDERS
+// /////////////////////////////////
+
+// model Order {
+//   id              Int                 @id @default(autoincrement())
+//   userId          Int
+//   courierId       Int?                
+//   tariffId        Int?                
+//   sqMeter         Float?
+//   address         String
+//   comment         String?
+//   status          OrderStatus          @default(NEW)
+//   price           Float?
+//   createdAt       DateTime             @default(now())
+//   updatedAt       DateTime             @updatedAt
+
+//   // Relations
+//   user            User                 @relation(fields: [userId], references: [id])
+//   courier         Courier?             @relation(fields: [courierId], references: [id])
+//   tariff          Tariff?              @relation(fields: [tariffId], references: [id])
+//   statusHistory   OrderStatusHistory[]
+// }
+
+
+// /////////////////////////////////
+// // ORDER STATUS HISTORY
+// /////////////////////////////////
+
+// model OrderStatusHistory {
+//   id        Int          @id @default(autoincrement())
+//   orderId   Int
+//   status    OrderStatus
+//   createdAt DateTime     @default(now())
+
+//   order     Order        @relation(fields: [orderId], references: [id])
+// }
+
+
+// enum OrderStatus {
+//   NEW
+//   COURIER_SENT
+//   PICKED_UP
+//   WASHING
+//   DRYING
+//   PACKING
+//   ON_THE_WAY
+//   DELIVERED
+// }
+
+
+// /////////////////////////////////
+// // SUPPORT MESSAGE LOG
+// /////////////////////////////////
+
+// model MessageLog {
+//   id         Int       @id @default(autoincrement())
+//   userId     Int?
+//   adminId    Int?      // Operator yozgan bo'lsa
+//   message    String
+//   isFromUser Boolean    @default(true)
+//   createdAt  DateTime   @default(now())
+
+//   user       User?      @relation(fields: [userId], references: [id])
+// }
+
+
+// /////////////////////////////////
+// // CMS TEMPLATES (Bot xabarlari)
+// /////////////////////////////////
+
+// model Template {
+//   id        Int       @id @default(autoincrement())
+//   key       String    @unique
+//   content   String
+//   updatedAt DateTime  @updatedAt
+// }

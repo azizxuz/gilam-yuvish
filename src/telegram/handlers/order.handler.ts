@@ -443,6 +443,12 @@ export class OrderHandler {
     ctx.session.currentOrder.address = address;
     delete ctx.session.waitingForLocation;
 
+    await ctx.reply('⏳ Buyurtma saqlanmoqda...', {
+      reply_markup: {
+        remove_keyboard: true,
+      },
+    });
+
     await this.saveOrder(ctx);
     return true;
   }

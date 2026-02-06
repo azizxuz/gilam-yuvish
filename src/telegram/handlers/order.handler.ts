@@ -433,6 +433,11 @@ export class OrderHandler {
   private async saveOrder(ctx: any) {
     const { items, phoneNumber, address, region } = ctx.session.currentOrder;
 
+    // Foydalanuvchi ismini olish
+    const firstName = ctx.from?.first_name || "Noma'lum";
+    const lastName = ctx.from?.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+
     try {
       // Database ga saqlash
       const order = await this.prisma.order.create({
@@ -441,6 +446,7 @@ export class OrderHandler {
           phoneNumber,
           address,
           region,
+          fullName,
           status: 'NEW',
           items: {
             create: items.map((item) => ({
@@ -458,6 +464,7 @@ export class OrderHandler {
       // Buyurtma xulosasi
       let message = '✅ *Buyurtma qabul qilindi!*\n\n';
       message += `🆔 Buyurtma raqami: #${order.id}\n`;
+      message += `👤 Ism: ${fullName}\n`;
       message += `🌍 Viloyat: ${region}\n\n`;
       message += '📦 *Xizmatlar:*\n';
 
@@ -500,6 +507,7 @@ export class OrderHandler {
     try {
       let message = `🔔 *Yangi buyurtma!*\n\n`;
       message += `🆔 Buyurtma: #${order.id}\n`;
+      message += `👤 Mijoz: ${order.fullName}\n`;
       message += `🌍 Viloyat: ${order.region}\n`;
       message += `👤 Telegram ID: \`${order.telegramId}\`\n\n`;
       message += '📦 *Xizmatlar:*\n';

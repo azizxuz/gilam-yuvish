@@ -521,8 +521,6 @@ export class OrderHandler {
 
       message += `\n📱 Telefon: \`${order.phoneNumber}\``;
       message += `\n📍 Manzil: ${order.address}`;
-      message += `\n\n⏰ Vaqt: ${new Date().toLocaleString('uz-UZ')}`;
-
       const { default: axios } = await import('axios');
       await axios.post(
         `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`,
